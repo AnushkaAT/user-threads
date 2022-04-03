@@ -20,8 +20,14 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	
 	t->function= function;
 	t->arg= arg;
+	t->
 	
 	//To be added: allocate stack using mmap
+	t->stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
+	if(t->stack == MAP_FAILED){
+		printf("Thread stack allocation error\n");
+		return -1;
+	}
 	
 	t->th_id= clone(thread_start, t->stack+ STACK_SIZE, CLONE_FS | CLONE_FILES | CLONE_SIGHAND |CLONE_VM, t);
 	if(t->th_id== -1){
