@@ -20,7 +20,7 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	
 	t->function= function;
 	t->arg= arg;
-	t->
+	t->th_state = JOINABLE;
 	
 	//To be added: allocate stack using mmap
 	t->stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
@@ -29,13 +29,29 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 		return -1;
 	}
 	
-	t->th_id= clone(thread_start, t->stack+ STACK_SIZE, CLONE_FS | CLONE_FILES | CLONE_SIGHAND |CLONE_VM, t);
+	t->th_id= clone(thread_start, t->stack+ STACK_SIZE, SIGCHLD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |CLONE_VM, t);
 	if(t->th_id== -1){
 		free(t);
 		printf("Thread creation error\n");
 		return errno;
 	}
-	
+	//Adding thread to linked list
+	insert();
+}
+
+int thread_kill(thread tcb, int sig){
+	//if sig=0, no signal sent
+    if(sig == 0) {
+        return 0;
+    }
+	//check for signal
+	if(sig < 0 || sig > 64){
+		return EINVAL;	
+	}	
+
+	if(sig > 0){
+		kill(thread, sig);
+	}
 }
 
 int thread_start(void *t){
@@ -46,4 +62,16 @@ int thread_start(void *t){
 	return 0;
 }
 
-int thread_join(thread *tcb);
+int thread_join(thread tcb){
+	thread *t = getnodebytid(thread, threadid);
+	if(t == NULL){
+		return ESRCH;
+	}
+	if(t->th_state == JOINED) {
+        return EINVAL;
+    }
+
+}
+
+void thread_exit(){	
+}
