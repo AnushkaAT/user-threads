@@ -45,7 +45,7 @@ int thread_kill(thread tcb, int sig){
         return 0;
     }
 	//check for signal
-	if(sig < 0 || sig > 64){
+	if(sig < 0 || sig > 32){
 		return EINVAL;	
 	}	
 
