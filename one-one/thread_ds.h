@@ -29,7 +29,7 @@ typedef struct thread{
     void *stack;
     
     //return value
-    void *retval;
+    void *retrnval;
     
     //more fields to be added
 }thread;
