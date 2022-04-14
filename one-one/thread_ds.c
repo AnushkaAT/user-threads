@@ -91,10 +91,16 @@ int main(){
     node *n1;
     n1 = NULL;
     t1->th_id = 100;
-    t2->th_id = 400;
+    t2->th_id = 500;
     t3->th_id = 2;
     insert(&n1, t1);
     insert(&n1, t2);
     insert(&n1, t3);
     traverse(n1);
+    printf("_______________\n");
+    removenode(&n1, 100);
+    traverse(n1);
+    node *ntest = searchtid(n1, 500);
+    printf("%d", ntest->block->th_id);
+    return 0; 
 }
