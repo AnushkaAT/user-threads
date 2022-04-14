@@ -44,12 +44,6 @@ typedef struct thread{
     //more fields to be added
 }thread;
 
-//Singly linked list
-typedef struct node{
-    thread block;
-    struct node *next;
-}node;
-
 void thread_init(void);
 int thread_create(thread *tcb, void *(*function) (void *), void *arg);
 int thread_join(thread *tcb, void **retval);
