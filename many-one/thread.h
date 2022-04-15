@@ -27,7 +27,7 @@ typedef struct thread{
     int th_state;
     
     //thread status
-    int th_status
+    int th_status;
 
     //function pointer
     void *(*function) (void *);
@@ -41,6 +41,9 @@ typedef struct thread{
     //return value
     void *retrnval;
     
+    //context of thread-> required for scheduling
+    sigjmp_buf context;
+    
     //more fields to be added
 }thread;
 
@@ -50,6 +53,6 @@ int thread_join(thread *tcb, void **retval);
 void thread_exit(void *retval);
 int thread_kill(thread tcb, int sig);
 
-void threadt_start(void);
+void thread_start(void);
 void scheduler(void);
 
