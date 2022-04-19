@@ -31,7 +31,7 @@ typedef struct thread{
     int th_state;
     
     //thread status
-    //int th_status;
+    int th_status;
 
     //function pointer
     void *(*function) (void *);

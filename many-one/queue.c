@@ -44,11 +44,25 @@ int isempty(queue q){
 	return 0;
 }
 
+thread* searchtid(queue q, int tid){
+	thread *t;
+	node *p;
+	p= q.front;
+	while(p){
+		t= p->block;
+		if(t->th_id== tid){
+			return t;
+		}
+		p=p->next;
+	}
+	return NULL;
+}
+
 //function not required for thread. Done only for debugging purpose.
 void printq(queue q){
 	node *p;
 	p= q.front;
-	printf("Queue:\n");
+	printf("Queue: ");
 	while(p){
 		printf("%d-> ", p->block->th_id);
 		p=p->next;
