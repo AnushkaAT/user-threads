@@ -71,6 +71,4 @@ void printq(queue q){
 	return 0;
 }*/
 
-int main(){
-return 0;
-}
+

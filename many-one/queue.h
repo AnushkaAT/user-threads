@@ -15,5 +15,6 @@ void init_queue(queue *q);
 void enqueue(queue *q, thread *t);
 thread* dequeue(queue *q);
 int isempty(queue q);
+void printq(queue q);
 
 

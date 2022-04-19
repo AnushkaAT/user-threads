@@ -24,7 +24,7 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 		return -1;
 	}
 	t->function= function;
-	t->arg= arg;
+	t->args= arg;
 	t->th_state = JOINABLE;
 	
 	//To be added: allocate stack using mmap

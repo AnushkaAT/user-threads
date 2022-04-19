@@ -3,6 +3,10 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <sys/mman.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <stdatomic.h>
+#include <sys/types.h>
 
 //Size of stack for a thread
 #define STACK_SIZE (1024*64)
@@ -27,7 +31,7 @@ typedef struct thread{
     int th_state;
     
     //thread status
-    int th_status;
+    //int th_status;
 
     //function pointer
     void *(*function) (void *);
@@ -49,8 +53,9 @@ typedef struct thread{
 
 void thread_init(void);
 int thread_create(thread *tcb, void *(*function) (void *), void *arg);
-int thread_join(thread *tcb, void **retval);
+int thread_join(int tid, void **retval);
 void thread_exit(void *retval);
+void thread_yield(void);
 int thread_kill(thread tcb, int sig);
 
 void thread_start(void);
