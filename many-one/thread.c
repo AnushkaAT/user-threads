@@ -188,6 +188,52 @@ void scheduler(void){
 }
 
 
+void block_sig(void){
+	sigset_t siga;
+    sigemptyset(&siga);
+    sigaddset(&siga, SIGVTALRM);
+
+    if (sigprocmask(SIG_BLOCK, &siga, NULL) == -1) {
+        perror("sigprocmask");
+        exit(0);
+    }
+    return;
+}
+
+void unblock_sig(void){
+	sigset_t siga;
+    sigemptyset(&siga);
+    sigaddset(&siga, SIGVTALRM);
+
+    if (sigprocmask(SIG_UNBLOCK, &siga, NULL) == -1) {
+        perror("sigprocmask");
+        exit(0);
+    }
+    return;
+}
+
+
+//synchronization: spinlocks
+int spinlock_init(thread_spinlock *lock);{
+	*lock= 0;
+	return 0;
+}
+
+int thread_spin_lock(thread_spinlock *lock){
+	while(__sync_lock_test_and_set(lock,1))
+		;
+	return 0;
+}
+
+int thread_spin_unlock(thread_spinlock *lock){
+	if(*lock == 1) {
+        __sync_lock_release(lock,0);
+        return 0;
+    }
+    return EINVAL;
+}
+
+
 void* fun1(void *a){
 	printf("In thread 1\n");
 	printq(*ready);

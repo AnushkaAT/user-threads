@@ -1,6 +1,6 @@
 # user-threads
 
-##Implementation of user-threads library in c
+## Implementation of user-threads library in c
 Done as part of OS course project
 
 Authors:

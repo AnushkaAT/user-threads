@@ -23,6 +23,8 @@
 #define RUNNING 2
 #define TERMINATED 3
 
+typedef unsigned int thread_spinlock;
+
 typedef struct thread{
     //thread id
     int th_id;
