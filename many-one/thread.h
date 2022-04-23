@@ -58,8 +58,15 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg);
 int thread_join(int tid, void **retval);
 void thread_exit(void *retval);
 void thread_yield(void);
-int thread_kill(thread tcb, int sig);
+int thread_kill(int tid, int sig);
 
 void thread_start(void);
 void scheduler(void);
 
+void block_sig(void);
+void unblock_sig(void);
+int spinlock_init(thread_spinlock *lock);
+int thread_spin_lock(thread_spinlock *lock);
+int thread_spin_unlock(thread_spinlock *lock);
+
+void readyprint(void);

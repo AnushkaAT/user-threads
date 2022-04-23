@@ -71,6 +71,29 @@ void printq(queue q){
 	return;
 }
 
+thread* removetid(queue *q, int tid){
+	thread *t;
+	node *p, *prev=NULL;
+	p= q->front;
+	while(p){
+		t= p->block;
+		if(t->th_id== tid){
+			if (prev == NULL) {
+				q->front= p->next;
+	    	} 
+			else {
+				prev->next = p->next;
+	    	}
+			t= p->block;
+			free(p);
+			return t;
+		}
+		prev= p;
+		p=p->next;
+	}
+	return NULL;
+}
+
 //just to ensure queue is working properly
 /*int main(){
 	queue *q= (queue*)malloc(sizeof(queue));
@@ -81,6 +104,8 @@ void printq(queue q){
 	enqueue(q, &t2);
 	enqueue(q, &t3);
 	printf("Count: %d\n", q->count);
+	printq(*q);
+	dequeue(q);
 	printq(*q);
 	return 0;
 }*/

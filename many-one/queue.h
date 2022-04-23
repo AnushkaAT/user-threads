@@ -17,5 +17,4 @@ thread* dequeue(queue *q);
 int isempty(queue q);
 void printq(queue q);
 thread* searchtid(queue q, int tid);
-
-
+thread* removetid(queue *q, int tid);

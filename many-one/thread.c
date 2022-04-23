@@ -37,9 +37,9 @@ void timer_stop(void){
 void timer_start(void){
 	//printf("In timer start function\n");
 	timer.it_interval.tv_sec= 0;
-	timer.it_interval.tv_usec= 100;
+	timer.it_interval.tv_usec= 10000;
 	timer.it_value.tv_sec = 0;
-	timer.it_value.tv_usec = 100;
+	timer.it_value.tv_usec = 10000;
 	setitimer(ITIMER_VIRTUAL, &timer, NULL);
 }
 
@@ -72,7 +72,8 @@ void thread_init(void){
 
 
 int thread_create(thread *tcb, void *(*function) (void *), void *arg){
-	timer_stop();
+	//timer_stop();
+	block_sig();
 	//function to be executed
     if(function == NULL){
 		printf("Null routine pointer\n");
@@ -101,19 +102,23 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	//printf("%p\n", tcb->context);
 	enqueue(ready, tcb);
 	//printq(*ready);
+	unblock_sig();
 	timer_start();
 	//raise(SIGPROF);
 	return tcb->th_id;
 }
 
 int thread_join(int tid, void **retval){
-	timer_stop();
+	//timer_stop();
+	block_sig();
 	if(tid<0){
+		unblock_sig();
 		timer_start();
 		errno= EINVAL;
 		return -1;
 	}
 	if(currt->th_id== tid){
+		unblock_sig();
 		timer_start();
 		//deadlock
 		return -1;
@@ -121,29 +126,39 @@ int thread_join(int tid, void **retval){
 	
 	thread *t= searchtid(*ready, tid);
 	if(t==NULL){
+		unblock_sig();
 		timer_start();
 		return -1;
 	}
 	if(t->th_state == JOINED) {
+		unblock_sig();
+		timer_start();
 		return EINVAL;
     }
     t->th_state= JOINED;
+	printf("Join: waiting\n");
+	unblock_sig();
     timer_start();
     while(t->th_status!= TERMINATED);
-    if(retval){
+	printf("%d terminated\n", t->th_id);
+    if(t){
     	*retval= t->retrnval;
     }
 	return 0;
 }
 
 void thread_exit(void *retval){
+	printf("Exiting thread: %d\n", currt->th_id);
+	block_sig();
 	if(currt==NULL){
 		exit(0);
 	}
 	currt->th_status= TERMINATED;
 	currt->retrnval= retval;
 	enqueue(complete, currt);
-	//printq(*ready);
+	currt= dequeue(ready);
+	printq(*ready);
+	unblock_sig();
 	thread_yield(); 
 }
 
@@ -153,11 +168,21 @@ void thread_yield(void){
 }
 
 
-int thread_kill(thread tcb, int sig){
+int thread_kill(int tid, int sig){
+	//invalid signal
+	if(sig<0 || sig>64)
+		return EINVAL; 
+
+	if(tid== currt->th_id){
+		printf("raised signal %d to tid %d", sig, tid);
+		raise(sig);
+	}
+
 
 }
 
 void thread_start(void){
+	unblock_sig();
 	void *result= currt->function(currt->args);
 	//currt->status= TERMINATED;
 	//raise SIGVTALRM signal from thread_exit function;
@@ -175,8 +200,11 @@ void scheduler(void){
 	if(sigsetjmp(currt->context, 1)== 1)
 		return;
 
+	if(currt->th_status!= TERMINATED)
+		currt->th_status= READY;
 	//round robin fashion for selecting next thread
 	enqueue(ready, currt);
+	printf("enqueued %d in scheduler\n", currt->th_id);
 	currt= dequeue(ready);
 	if(currt== NULL)
 		exit(0);
@@ -214,7 +242,7 @@ void unblock_sig(void){
 
 
 //synchronization: spinlocks
-int spinlock_init(thread_spinlock *lock);{
+int spinlock_init(thread_spinlock *lock){
 	*lock= 0;
 	return 0;
 }
@@ -233,32 +261,6 @@ int thread_spin_unlock(thread_spinlock *lock){
     return EINVAL;
 }
 
-
-void* fun1(void *a){
-	printf("In thread 1\n");
+void readyprint(void){
 	printq(*ready);
-	for(int i=0; i<100000; i++);
-	return NULL;
-}
-
-void* fun2(void *b){
-	printf("In thread 2\n");
-	return NULL;
-}
-
-int main(){
-	thread_init();
-	int tid1, tid2;
-	thread *t1, *t2;
-	tid1= thread_create(t1, fun1, NULL);
-	
-	void **res;
-	thread_join(1, res);
-	printf("Created: %d\n", tid1);
-	printq(*ready);
-	tid2= thread_create(t2, fun2, NULL);
-	printq(*ready);
-	for(int i=0; i<100000; i++);
-	printf("Created: %d\n", tid2);
-	return 0;
 }
