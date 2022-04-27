@@ -23,7 +23,12 @@
 #define RUNNING 2
 #define TERMINATED 3
 
-typedef unsigned int thread_spinlock;
+#define LOCKED 1
+#define UNLOCKED 0
+
+typedef struct thread_spinlock{
+    int flag;
+}thread_spinlock;
 
 typedef struct thread{
     //thread id
@@ -68,5 +73,6 @@ void unblock_sig(void);
 int spinlock_init(thread_spinlock *lock);
 int thread_spin_lock(thread_spinlock *lock);
 int thread_spin_unlock(thread_spinlock *lock);
+
 
 void readyprint(void);

@@ -58,11 +58,12 @@ void thread_init(void){
 	sigsetjmp(currt->context, 1);
 	enqueue(ready, currt);
 	//setup signal handler for SIGVTALRM. Signal raised based on working time interupts
-	//check if SIGPROF signal is better for implementation->profiling timer
+	//check if SIGPROF signal is better for implementation->profiling timer. Almost similar.
 	struct sigaction sighand;
-	 memset (&sighand, 0, sizeof (sighand));
+	memset (&sighand, 0, sizeof (sighand));
 	sighand.sa_handler= &scheduler;
 	sighand.sa_flags = 0;
+	unblock_sig();
 	sigaction(SIGVTALRM, &sighand, NULL);
 	
 	//setup timer
@@ -76,12 +77,12 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	block_sig();
 	//function to be executed
     if(function == NULL){
-		printf("Null routine pointer\n");
+		printf("ERROR: Null routine pointer\n");
 		return -1;
 	}
 	tcb= (thread*)malloc(sizeof(thread));
 	if(tcb==NULL){
-		printf("Memory cannot be allocated\n");
+		printf("ERROR: Memory cannot be allocated\n");
 		return -1;
 	}
 	tcb->function= function;
@@ -91,7 +92,7 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	tcb->th_status= READY;
 	tcb->stack= mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
 	if(tcb->stack == MAP_FAILED){
-		printf("Thread stack allocation error\n");
+		printf("ERROR: Thread stack allocation\n");
 		return -1;
 	}
 	//context
@@ -105,6 +106,7 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	unblock_sig();
 	timer_start();
 	//raise(SIGPROF);
+	printf("Created %d\n", tcb->th_id);
 	return tcb->th_id;
 }
 
@@ -157,6 +159,7 @@ void thread_exit(void *retval){
 	currt->retrnval= retval;
 	enqueue(complete, currt);
 	currt= dequeue(ready);
+	printq(*complete);
 	printq(*ready);
 	unblock_sig();
 	thread_yield(); 
@@ -190,7 +193,7 @@ void thread_start(void){
 }
 
 void scheduler(void){
-	printf("Signal: Came to scheduler: %d\n", currt->th_id);
+	//printf("Signal: Came to scheduler: %d\n", currt->th_id);
 	timer_stop();
 	//save old context
 	if(currt== NULL){
@@ -204,13 +207,12 @@ void scheduler(void){
 		currt->th_status= READY;
 	//round robin fashion for selecting next thread
 	enqueue(ready, currt);
-	printf("enqueued %d in scheduler\n", currt->th_id);
-	currt= dequeue(ready);
+	//printf("enqueued %d in scheduler\n", currt->th_id);
+	currt= dequeue(ready);\
+	//printf("dequeued %d in scheduler\n", currt->th_id);
 	if(currt== NULL)
 		exit(0);
 	timer_start();
-	//printf("timer started, now longjmp\n");
-	//printf("context: %p\n", currt->context);
 	siglongjmp(currt->context, 1);
 	//wont return here. Jump to function of thread
 }
@@ -243,19 +245,22 @@ void unblock_sig(void){
 
 //synchronization: spinlocks
 int spinlock_init(thread_spinlock *lock){
-	*lock= 0;
+	block_sig();
+	lock= (thread_spinlock*)malloc(sizeof(thread_spinlock));
+	lock->flag= UNLOCKED;
+	unblock_sig();
 	return 0;
 }
 
 int thread_spin_lock(thread_spinlock *lock){
-	while(__sync_lock_test_and_set(lock,1))
+	while(__sync_lock_test_and_set(&(lock->flag),1))
 		;
 	return 0;
 }
 
 int thread_spin_unlock(thread_spinlock *lock){
-	if(*lock == 1) {
-        __sync_lock_release(lock,0);
+	if(lock->flag == 1) {
+        __sync_lock_release(&(lock->flag),0);
         return 0;
     }
     return EINVAL;

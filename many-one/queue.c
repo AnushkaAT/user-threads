@@ -26,6 +26,8 @@ void enqueue(queue *q, thread *t){
 }
 
 thread* dequeue(queue *q){
+	if(q==NULL)
+		return NULL;
 	if(isempty(*q)==1)
 		return NULL;
 	thread *t;
