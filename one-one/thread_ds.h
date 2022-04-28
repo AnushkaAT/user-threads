@@ -36,13 +36,13 @@ typedef struct thread{
 
 //Singly linked list
 typedef struct node{
-    thread block;
+    thread *block;
     struct node *next;
 }node;
 
-void insert(node **front, thread new);
+void insert(node **front, thread *new);
 node* searchtid(node *front, int threadid);
-node* remove(node **front, int threadid);
+node* removenode(node **front, int threadid);
 
 int thread_create(thread *tcb, void *(*function) (void *), void *arg);
 int thread_join(thread *tcb, void **retval);
