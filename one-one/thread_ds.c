@@ -28,7 +28,7 @@ node* searchtid(node *front, int threadid){
     while(n != NULL){
         
         if(n->block->th_id == threadid){
-            return n;
+            return n->block;
         }
         n = n->next;
     }
@@ -104,3 +104,4 @@ int main(){
     printf("%d", ntest->block->th_id);
     return 0; 
 }
+
