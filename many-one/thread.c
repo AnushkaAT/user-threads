@@ -6,9 +6,9 @@
 #define JB_PC    7
 
 //global variables
-static queue *ready, *complete; //queue of thread for scheduling
-static thread *currt; //currently running thread
-static int thrdcount= 0; //current 
+queue *ready, *complete; //queue of thread for scheduling
+thread *currt; //currently running thread
+int thrdcount= 0; //current 
 static struct itimerval timer;
 
 //mangle: encryption for pointers in jmp_buf array. 
@@ -43,6 +43,27 @@ void timer_start(void){
 	setitimer(ITIMER_VIRTUAL, &timer, NULL);
 }
 
+void block_sig(void){
+	sigset_t siga;
+    sigemptyset(&siga);
+    sigaddset(&siga, SIGVTALRM);
+
+    if (sigprocmask(SIG_BLOCK, &siga, NULL) == -1) {
+        exit(0);
+    }
+    return;
+}
+
+void unblock_sig(void){
+	sigset_t siga;
+    sigemptyset(&siga);
+    sigaddset(&siga, SIGVTALRM);
+
+    if (sigprocmask(SIG_UNBLOCK, &siga, NULL) == -1) {
+        exit(0);
+    }
+    return;
+}
 
 void thread_init(void){
 	ready= (queue*)malloc(sizeof(queue));
@@ -215,31 +236,6 @@ void scheduler(void){
 	timer_start();
 	siglongjmp(currt->context, 1);
 	//wont return here. Jump to function of thread
-}
-
-
-void block_sig(void){
-	sigset_t siga;
-    sigemptyset(&siga);
-    sigaddset(&siga, SIGVTALRM);
-
-    if (sigprocmask(SIG_BLOCK, &siga, NULL) == -1) {
-        perror("sigprocmask");
-        exit(0);
-    }
-    return;
-}
-
-void unblock_sig(void){
-	sigset_t siga;
-    sigemptyset(&siga);
-    sigaddset(&siga, SIGVTALRM);
-
-    if (sigprocmask(SIG_UNBLOCK, &siga, NULL) == -1) {
-        perror("sigprocmask");
-        exit(0);
-    }
-    return;
 }
 
 
