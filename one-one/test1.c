@@ -16,7 +16,7 @@ void* fibnum(void *y){
 
 //Matrix Addition
 void* matadd(void *z){
-	printf("\nInside Thread2!\n");
+	printf("\nInside Thread2\n");
 	int a[4][4] = {{1,2,3,4}, {5,6,7,8}, {1,2,3,4}, {5,6,7,8}};
 	int b[4][4] = {{1,2,3,4}, {5,6,7,8}, {1,2,3,4}, {5,6,7,8}};
 	int c[4][4] = {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
@@ -35,12 +35,9 @@ void* matadd(void *z){
 }
 
 int main(){
+	init_lock();
 	thread *t1, *t2;
 	thread_create(t1, fibnum, NULL);
 	thread_create(t2, matadd, NULL);
-	n->block->th_state = JOINABLE;
-	thread_join(*n->block, NULL);
-	int x = 6;
-	thread_exit(&x);
 	return 0;
 	}

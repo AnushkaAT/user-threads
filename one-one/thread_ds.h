@@ -12,6 +12,11 @@
 #define JOINABLE 1
 #define JOINED 2
 
+//Synchronisation
+#define LOCKED 1
+#define UNLOCKED 0
+
+
 typedef struct thread{
     //thread id
     int th_id;
@@ -19,8 +24,8 @@ typedef struct thread{
     //thread state
     int th_state;
 
-	//function pointer
-	void *(*function) (void *);
+    //function pointer
+    void *(*function) (void *);
 	
     //pointer to arguments
     void *args;
@@ -30,8 +35,6 @@ typedef struct thread{
     
     //return value
     void *retrnval;
-    
-    //more fields to be added
 }thread;
 
 //Singly linked list
@@ -40,9 +43,20 @@ typedef struct node{
     struct node *next;
 }node;
 
+typedef struct thread_spinlock{
+    int flag;
+}thread_spinlock;
+
+
 void insert(node **front, thread *new);
 node* searchtid(node *front, int threadid);
 node* removenode(node **front, int threadid);
 
 int thread_create(thread *tcb, void *(*function) (void *), void *arg);
-int thread_join(thread *tcb, void **retval);
+void init_lock();
+int thread_join(thread tcb, void **retval);
+
+
+int spinlock_init(thread_spinlock *lock);
+int thread_spin_lock(thread_spinlock *lock);
+int thread_spin_unlock(thread_spinlock *lock);
