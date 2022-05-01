@@ -8,30 +8,30 @@
 //default number of kernel threads for mapping= 3
 static int nkthreads= 3;
 int thrdcount=0;
-//scheduler queue
-queue *ready;
+//ktlist is a global array of kernel threads
+kthread *ktlist;
 
-void thread_init(void){
-    ready= (queue*)malloc(sizeof(queue));
-	init_queue(ready);
-	//setup signal handler for SIGVTALRM. Signal raised based on working time interupts
+void thread_init(int nk){
+	if(n>1){
+        nkthreads= n;
+    }
+	//initialise the global array of kernel threads.
+	//inefficient: space may get wasted! Make shift work for now
+    ktlist= (kthread*)malloc(sizeof(kthread)*nkthreads);
+	for(int i=0; i<nkthreads; i++){
+		ktlist[i].running=NULL;
+		ktlist[i].ksched= (queue*)malloc(sizeof(queue));
+		init_queue(ktlist[i].ksched);
+	}
+	//setup signal handler for SIGVTALRM.
 	struct sigaction sighand;
 	memset (&sighand, 0, sizeof (sighand));
 	sighand.sa_handler= &scheduler;
 	sighand.sa_flags = 0;
 	unblock_sig();
 	sigaction(SIGVTALRM, &sighand, NULL);
-	
 	//setup timer
-	//printf("Started timer\n");
 	timer_start();
-}
-
-void set_nkthreads(int n){
-    if(n>1){
-        nkthreads= n;
-    }
-    return;
 }
 
 int thread_create(thread *tcb, void *(*function) (void *), void *arg){
@@ -54,7 +54,11 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
         //clone(); proper arg here
 
     }
-    enqueue(ready, tcb);
+	else{
+		int index= (tcb->th_id)%nkthreads;
+		enqueue(ktlist[index].ksched, tcb);
+		scheduler();
+	}
 }
 
 int thread_join(int tid, void **retval){

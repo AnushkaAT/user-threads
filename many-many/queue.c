@@ -96,20 +96,65 @@ thread* removetid(queue *q, int tid){
 	return NULL;
 }
 
-//just to ensure queue is working properly
-/*int main(){
-	queue *q= (queue*)malloc(sizeof(queue));
-	init_queue(q);
-	thread t1, t2, t3;
-	t1.th_id= 1; t2.th_id= 2; t3.th_id= 3;
-	enqueue(q, &t1);
-	enqueue(q, &t2);
-	enqueue(q, &t3);
-	printf("Count: %d\n", q->count);
-	printq(*q);
-	dequeue(q);
-	printq(*q);
-	return 0;
-}*/
+/*void insert(klist **front, kthread *new){
+    klist *n;
+    n = (klist *)(malloc(sizeof(klist)));
+    n->block = new;
+    if(*front == NULL){
+        n->next = NULL;
+        *front = n;
+        return;
+    }
+    n->next = *front;
+    *front = n;
+    return;
+}
+
+//Searching a node based on given thread id
+klist* searchtid(klist* front, int kid){
+    klist *n;
+    n = front;
+    
+    if(n == NULL){
+        return NULL;
+    }
+
+    while(n != NULL){
+        
+        if(n->block->kid == kid){
+            return n->block;
+        }
+        n = n->next;
+    }
+    return NULL;
 
 
+
+}
+
+//removing a node with given thread id
+node* removenode(klist **front, int kid){
+    node *n = *front;
+
+    if(n != NULL && n->block->kid == kid){
+        *front = n->next;
+        //free(n);
+        return n;
+    }
+
+    node *p = NULL;
+    while(n != NULL && n->block->kid != kid){
+        p = n;
+        n = n->next;
+    }
+    
+    //node not present
+    if(n == NULL){
+        return NULL;
+    }
+
+    p->next = n->next;
+    //free(n);
+    return n;
+}
+*/

@@ -61,8 +61,13 @@ typedef struct thread{
     //more fields to be added
 }thread;
 
-void thread_init(void);
-void set_nkthreads(int kcount);
+typedef struct kthread{
+    int kid;
+    thread* running;
+    queue *ksched;
+}kthread;
+
+void thread_init(int nk);
 int thread_create(thread *tcb, void *(*function) (void *), void *arg);
 int thread_join(int tid, void **retval);
 void thread_exit(void *retval);
