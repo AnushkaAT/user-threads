@@ -148,18 +148,13 @@ int thread_join(int tid, void **retval){
 	}
 	
 	thread *t= searchtid(*ready, tid);
-	if(t==NULL){
+	if(t==NULL || t->th_state == JOINED){
 		unblock_sig();
 		timer_start();
 		return -1;
 	}
-	if(t->th_state == JOINED) {
-		unblock_sig();
-		timer_start();
-		return -1;
-    }
     t->th_state= JOINED;
-	printf("Join: waiting\n");
+	//printf("Join: waiting\n");
 	unblock_sig();
     timer_start();
     while(t->th_status!= TERMINATED);
@@ -192,7 +187,7 @@ void thread_yield(void){
 	raise(SIGVTALRM);
 }
 
-
+//incomplete
 int thread_kill(int tid, int sig){
 	//invalid signal
 	if(sig<0 || sig>64)
