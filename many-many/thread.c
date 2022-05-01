@@ -111,7 +111,36 @@ void thread_start(thread *t){
 	//start the function
 	tcb->retrnval= tcb->function(tcb->args);
 }
-void scheduler(void);
+void scheduler(void){
+	timer_stop();
+	block_sig();
+	queue ready= ktlist[active].ksched;
+	if(ready==NULL){
+		printf("Done");
+		return;
+	}
+	//save old context
+	currt= ktlist[active].running;
+	if(currt== NULL){
+		printf("currt null\n");
+		return;
+	}
+	int id= currt->th_id;
+	if(sigsetjmp(currt->context, 1)== 1)
+		return;
+
+	if(currt->th_status!= TERMINATED)
+		currt->th_status= READY;
+	//round robin fashion for selecting next thread
+	enqueue(ready, currt);
+	currt= dequeue(ready);
+	if(currt== NULL)
+		exit(0);
+	unblock_sig();
+	timer_start();
+	// printf("long jump from %d to %d\n", id, currt->th_id);
+	siglongjmp(currt->context, 1);
+}
 
 void block_sig(void);
 void unblock_sig(void);

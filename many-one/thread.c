@@ -249,19 +249,24 @@ void scheduler(void){
 //synchronization: spinlocks
 int spinlock_init(thread_spinlock *lock){
 	block_sig();
-	lock= (thread_spinlock*)malloc(sizeof(thread_spinlock));
+	//lock= (thread_spinlock*)malloc(sizeof(thread_spinlock));
+	if(lock== NULL){
+		printf("malloc: null\n");
+	}
+	//printf("malloced");
 	lock->flag= UNLOCKED;
 	unblock_sig();
 	return 0;
 }
 
-int thread_spin_lock(thread_spinlock *lock){
+//spinlocks
+int thread_lock(thread_spinlock *lock){
 	while(__sync_lock_test_and_set(&(lock->flag),1))
 		;
 	return 0;
 }
 
-int thread_spin_unlock(thread_spinlock *lock){
+int thread_unlock(thread_spinlock *lock){
 	if(lock->flag == 1) {
         __sync_lock_release(&(lock->flag),0);
         return 0;

@@ -28,6 +28,7 @@
 
 typedef struct thread_spinlock{
     int flag;
+    int tid;
 }thread_spinlock;
 
 typedef struct thread{
@@ -71,8 +72,8 @@ void scheduler(void);
 void block_sig(void);
 void unblock_sig(void);
 int spinlock_init(thread_spinlock *lock);
-int thread_spin_lock(thread_spinlock *lock);
-int thread_spin_unlock(thread_spinlock *lock);
+int thread_lock(thread_spinlock *lock);
+int thread_unlock(thread_spinlock *lock);
 
 
 void readyprint(void);
