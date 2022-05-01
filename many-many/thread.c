@@ -11,6 +11,30 @@ int thrdcount=0;
 //ktlist is a global array of kernel threads
 kthread *ktlist;
 
+//mangle: encryption for pointers in jmp_buf array. 
+//Function mangle taken from https://sites.cs.ucsb.edu/~chris/teaching/cs170/projects/proj2.html
+static long int mangle(long int p){
+	long int ret;
+	asm(" mov %1, %%rax;\n"
+		" xor %%fs:0x30, %%rax;"
+		" rol $0x11, %%rax;"
+		" mov %%rax, %0;"
+	: "=r"(ret)
+	: "r"(p)
+	: "%rax"
+	);
+	return ret;
+}
+
+void timer_start(void){
+	//printf("In timer start function\n");
+	timer.it_interval.tv_sec= 0;
+	timer.it_interval.tv_usec= 10000;
+	timer.it_value.tv_sec = 0;
+	timer.it_value.tv_usec = 10000;
+	setitimer(ITIMER_VIRTUAL, &timer, NULL);
+}
+
 void thread_init(int nk){
 	if(n>1){
         nkthreads= n;
@@ -45,6 +69,11 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	tcb->th_state = JOINABLE;
 	tcb->th_id= thrdcount++;
 	tcb->th_status= READY;
+	sigsetjmp(currt->context, 1);
+	//modify rsp(index JB_RSP=6) and pc(index JB_PC=7) in sigjmp_buf. Mangle it first
+	tcb->context[0].__jmpbuf[JB_RSP] = mangle((long int) tcb->stack+ STACK_SIZE - sizeof(long int));
+	tcb->context[0].__jmpbuf[JB_PC] = mangle((long int) thread_start);
+
 	tcb->stack= mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
 	if(tcb->stack == MAP_FAILED){
 		printf("ERROR: Thread stack allocation\n");
@@ -52,7 +81,8 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	}
     if(thrdcount< nkthreads){
         //clone(); proper arg here
-
+		tcb->kid= clone(thread_start, t->stack+ STACK_SIZE, SIGCHLD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |CLONE_VM, tcb);
+		timer_start();
     }
 	else{
 		int index= (tcb->th_id)%nkthreads;
@@ -75,7 +105,12 @@ void thread_yield(void){
 
 int thread_kill(int tid, int sig);
 
-void thread_start(void);
+void thread_start(thread *t){
+	thread *tcb= (thread*)t;
+	//call to sigset context;
+	//start the function
+	tcb->retrnval= tcb->function(tcb->args);
+}
 void scheduler(void);
 
 void block_sig(void);

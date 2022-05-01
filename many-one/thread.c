@@ -77,7 +77,7 @@ void thread_init(void){
 	currt->th_status= RUNNING;
 	currt->function= currt->args= currt->retrnval= NULL;
 	sigsetjmp(currt->context, 1);
-	enqueue(ready, currt);
+	//enqueue(ready, currt);
 	//setup signal handler for SIGVTALRM. Signal raised based on working time interupts
 	//check if SIGPROF signal is better for implementation->profiling timer. Almost similar.
 	struct sigaction sighand;
@@ -127,7 +127,7 @@ int thread_create(thread *tcb, void *(*function) (void *), void *arg){
 	unblock_sig();
 	timer_start();
 	//raise(SIGPROF);
-	printf("Created %d\n", tcb->th_id);
+	//printf("Created %d\n", tcb->th_id);
 	return tcb->th_id;
 }
 
@@ -171,19 +171,20 @@ int thread_join(int tid, void **retval){
 }
 
 void thread_exit(void *retval){
-	printf("Exiting thread: %d\n", currt->th_id);
+	
 	block_sig();
 	if(currt==NULL){
 		exit(0);
 	}
 	currt->th_status= TERMINATED;
 	currt->retrnval= retval;
+	int id= currt->th_id;
 	enqueue(complete, currt);
 	currt= dequeue(ready);
-	printq(*complete);
-	printq(*ready);
 	unblock_sig();
-	thread_yield(); 
+	printf("Exiting thread: %d, new= %d\n", id, currt->th_id);
+	//thread_yield();
+	siglongjmp(currt->context, 1);
 }
 
 //raise signal, giveup on cpu for other threads
@@ -214,13 +215,19 @@ void thread_start(void){
 }
 
 void scheduler(void){
-	//printf("Signal: Came to scheduler: %d\n", currt->th_id);
+	// printf("Signal: Came to scheduler: %d\n", currt->th_id);
 	timer_stop();
+	block_sig();
+	if(ready==NULL){
+		printf("Done");
+		return;
+	}
 	//save old context
 	if(currt== NULL){
 		printf("currt null\n");
 		return;
 	}
+	int id= currt->th_id;
 	if(sigsetjmp(currt->context, 1)== 1)
 		return;
 
@@ -228,12 +235,12 @@ void scheduler(void){
 		currt->th_status= READY;
 	//round robin fashion for selecting next thread
 	enqueue(ready, currt);
-	//printf("enqueued %d in scheduler\n", currt->th_id);
-	currt= dequeue(ready);\
-	//printf("dequeued %d in scheduler\n", currt->th_id);
+	currt= dequeue(ready);
 	if(currt== NULL)
 		exit(0);
+	unblock_sig();
 	timer_start();
+	// printf("long jump from %d to %d\n", id, currt->th_id);
 	siglongjmp(currt->context, 1);
 	//wont return here. Jump to function of thread
 }

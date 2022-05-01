@@ -67,7 +67,7 @@ int thread_start(void *t){
 	thread *tcb= (thread*)t;
 	//call to sigset context;
 	//start the function
-	tcb->retrnval= tcb->function(tcb->arg);
+	tcb->retrnval= tcb->function(tcb->args);
 	return 0;
 }
 

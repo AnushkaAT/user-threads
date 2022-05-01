@@ -74,7 +74,7 @@ void thread_exit(void *retval);
 void thread_yield(void);
 int thread_kill(int tid, int sig);
 
-void thread_start(void);
+void thread_start(thread *t);
 void scheduler(void);
 
 void block_sig(void);
